@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src="https://global.oktacdn.com/okta-auth-js/5.0.0/okta-auth-js.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		//Okta-specific code, will run with more complicated flows like PKCE
+
+		const config = {
+			issuer: '',
+			clientId: '',
+			redirectUri: '',
+		};
+
+		const authClient = new OktaAuth(config);
+
+		authClient.session.exists()
+		.then(function(exists) {
+		if(exists) {
+			authClient.token.getWithoutPrompt({responseType: 'id_token'})
+			.then(function(res) {
+				const tokens = res.tokens;
+				authClient.tokenManager.add('idToken', tokens.idToken);
+				window.location.replace('/login');
+			})
+			.catch(function(err) {
+				console.log('ERROR', err);
+			});
+		}
+		else {
+			authClient.signInWithRedirect();
+		}
+		});
+
+		/*************
+		The below is a generic OIDC redirect with prompt=none.
+		It uses the simplistic implicit flow as an example only.
+
+		const config = {
+			oktaDomain: '',
+			clientId: '',
+			scopes: 'openid+profile',
+			responseType: 'id_token',
+			redirectUri: ''
+		}
+
+		window.location.replace(
+			`https://${config.oktaDomain}/oauth2/default/v1/authorize?
+			client_id=${config.clientId}&
+			scope=${config.scopes}&
+			response_type=${config.responseType}&
+			nonce=nonce&
+			state=staticState&
+			redirect_uri=${config.redirectUri}&
+			prompt=none`
+		);
+		**************/
+
+
+		/*
+		Note that both these snippets are reliant on an Okta session cookie
+		(sid) to be present in the /authorize request to replicate a true
+		Idp-initiated flow. If your browser is blocking 3rd party cookies,
+		this flow will end up prompting the user for credentials a second
+		time unless your application domain matches the Okta org domain.
+		*/
+	</script>
+</head>
+<body>
+</body>
+</html>
